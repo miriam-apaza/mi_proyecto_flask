@@ -13,7 +13,7 @@ SECRET_KEY = "mi_contrasena_secreta_123456789"
 
 # The SQLAlchemy connection string.
 #SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(basedir, "app.db")
-SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:@localhost/mi_proyecto_flask"
+SQLALCHEMY_DATABASE_URI = "mysql+pymysql://root:@localhost/miproyectoflask"
 # SQLALCHEMY_DATABASE_URI = 'mysql://myapp@localhost/myapp'
 # SQLALCHEMY_DATABASE_URI = 'postgresql://root:password@localhost/myapp'
 
