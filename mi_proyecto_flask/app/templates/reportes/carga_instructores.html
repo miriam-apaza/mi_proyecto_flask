@@ -1,0 +1,24 @@
+{% extends "appbuilder/base.html" %}
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Carga Horaria por Instructor</h2>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Instructor</th>
+                <th>Cursos Asignados</th>
+                <th>Total Horas Dictadas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in datos %}
+            <tr>
+                <td>{{ fila.nombres }} {{ fila.apellidos }}</td>
+                <td>{{ fila.total_cursos }}</td>
+                <td>{{ fila.total_horas or 0 }} hrs</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
