@@ -11,13 +11,21 @@
         </div>
     </div>
 
-    <div id="datos-dashboard" style="display: none;"
+    <div id="datos-kpi" style="display: none;"
          data-estudiantes="{{ total_estudiantes or 0 }}"
          data-cursos="{{ total_cursos or 0 }}"
-         data-inscripciones="{{ total_inscripciones or 0 }}">
+         data-inscripciones="{{ total_inscripciones or 0 }}"
+         data-aprobados="{{ total_aprobados or 0 }}"
+         data-reprobados="{{ total_reprobados or 0 }}">
     </div>
 
-    <div class="row">
+    <div id="datos-cursos-bucle" style="display: none;">
+        {% for curso in alumnos_por_curso %}
+        <div class="curso-item" data-nombre="{{ curso.nombre }}" data-cantidad="{{ curso.cantidad or 0 }}"></div>
+        {% endfor %}
+    </div>
+
+    <div class="row" style="margin-bottom: 15px;">
         
         <div class="col-sm-4 col-md-4" style="margin-bottom: 15px;">
             <div class="panel panel-primary dashboard-card" style="box-shadow: 0 4px 15px rgba(51, 122, 183, 0.15); border-radius: 6px; transition: all 0.3s ease;">
@@ -57,7 +65,7 @@
                         <h2 style="margin: 0; font-weight: bold; color: #5bc0de;">{{ total_inscripciones or 0 }}</h2>
                     </div>
                     <div style="float: right; background-color: #f0fafd; color: #5bc0de; width: 50px; height: 50px; border-radius: 50%; text-align: center; line-height: 50px; font-size: 24px;">
-                        <i class="fa fa-file-text-o"></i>
+                        <i class="fa fa-pencil-square-o"></i>
                     </div>
                     <div style="clear: both;"></div>
                 </div>
@@ -66,58 +74,72 @@
 
     </div>
 
-    <div class="row" style="margin-top: 15px;">
-        <div class="col-md-12">
+    <div class="row">
+        
+        <div class="col-md-7" style="margin-bottom: 20px;">
             <div class="panel panel-default" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 4px;">
                 <div class="panel-heading" style="font-weight: bold; background-color: #fcfcfc;">
-                    <i class="fa fa-bar-chart"></i> Vista Métrica Comparativa
+                    <i class="fa fa-bar-chart"></i> Cantidad de Alumnos Inscritos por Curso
                 </div>
-                <div class="panel-body" style="padding: 25px; min-height: 250px;">
-                    <div style="width: 100%; max-width: 700px; margin: 0 auto;">
-                        <canvas id="graficoDashboard"></canvas>
+                <div class="panel-body" style="padding: 20px;">
+                    <canvas id="graficoInscritosCurso" height="140"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5" style="margin-bottom: 20px;">
+            <div class="panel panel-default" style="box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 4px;">
+                <div class="panel-heading" style="font-weight: bold; background-color: #fcfcfc;">
+                    <i class="fa fa-pie-chart"></i> Estado General de Calificaciones
+                </div>
+                <div class="panel-body" style="padding: 20px;">
+                    <div style="max-width: 250px; margin: 0 auto;">
+                        <canvas id="graficoAprobacion" height="200"></canvas>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
+    </div>
 </div>
 
 <style>
     .dashboard-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.1) !important;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
     }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Extraer los datos guardados en el contenedor oculto
-        const contenedor = document.getElementById('datos-dashboard');
-        const estudiantes = parseInt(contenedor.getAttribute('data-estudiantes')) || 0;
-        const cursos = parseInt(contenedor.getAttribute('data-cursos')) || 0;
-        const inscripciones = parseInt(contenedor.getAttribute('data-inscripciones')) || 0;
+        // 1. Extraer variables métricas básicas
+        const kpiContenedor = document.getElementById('datos-kpi');
+        const totalAprobados = parseInt(kpiContenedor.getAttribute('data-aprobados')) || 0;
+        const totalReprobados = parseInt(kpiContenedor.getAttribute('data-reprobados')) || 0;
 
-        // Dibujar el gráfico comparativo
-        const ctx = document.getElementById('graficoDashboard').getContext('2d');
-        new Chart(ctx, {
+        // 2. Extraer listas complejas del DOM sin mezclar sintaxis Jinja/JS
+        const cursosLabels = [];
+        const cursosData = [];
+        
+        const elementosCurso = document.querySelectorAll('.curso-item');
+        elementosCurso.forEach(function(el) {
+            cursosLabels.push(el.getAttribute('data-nombre'));
+            cursosData.push(parseInt(el.getAttribute('data-cantidad')));
+        });
+
+        // 3. Renderizar Gráfico de Barras (Inscritos por Curso)
+        const ctxCursos = document.getElementById('graficoInscritosCurso').getContext('2d');
+        new Chart(ctxCursos, {
             type: 'bar',
             data: {
-                labels: ['Estudiantes', 'Cursos Ofertados', 'Matrículas / Inscripciones'],
+                labels: cursosLabels.length ? cursosLabels : ["Sin Cursos"],
                 datasets: [{
-                    label: 'Volumen Global',
-                    data: [estudiantes, cursos, inscripciones],
-                    backgroundColor: [
-                        'rgba(51, 122, 183, 0.75)', // Azul primary
-                        'rgba(92, 184, 92, 0.75)',  // Verde success
-                        'rgba(91, 192, 222, 0.75)'   // Celeste info
-                    ],
-                    borderColor: [
-                        '#337ab7',
-                        '#5cb85c',
-                        '#5bc0de'
-                    ],
+                    label: 'Alumnos Inscritos',
+                    data: cursosData.length ? cursosData : [0],
+                    backgroundColor: 'rgba(51, 122, 183, 0.75)',
+                    borderColor: 'rgba(51, 122, 183, 1)',
                     borderWidth: 1,
                     borderRadius: 4
                 }]
@@ -128,13 +150,32 @@
                     legend: { display: false }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1 }
-                    }
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
                 }
             }
-        }); // <-- ¡Corregido aquí el cierre estructural!
+        });
+
+        // 4. Renderizar Gráfico de Dona (Aprobados vs Reprobados)
+        const ctxAprobacion = document.getElementById('graficoAprobacion').getContext('2d');
+        new Chart(ctxAprobacion, {
+            type: 'doughnut',
+            data: {
+                labels: ['Aprobados', 'Reprobados'],
+                datasets: [{
+                    data: [totalAprobados, totalReprobados],
+                    backgroundColor: ['#5cb85c', '#d9534f'],
+                    borderColor: ['#fff', '#fff'],
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
     });
 </script>
 {% endblock %}
