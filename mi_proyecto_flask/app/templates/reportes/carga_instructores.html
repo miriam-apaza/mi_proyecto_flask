@@ -13,6 +13,15 @@
         </div>
     </div>
 
+    <div id="datos-flask" style="display: none;">
+        {% for fila in datos %}
+        <div class="instructor-row" 
+             data-nombre="{{ fila.nombres }} {{ fila.apellidos }}" 
+             data-horas="{{ fila.total_horas or 0 }}">
+        </div>
+        {% endfor %}
+    </div>
+
     <div class="row">
         
         <div class="col-md-7">
@@ -33,6 +42,7 @@
                             {% for fila in datos %}
                             <tr style="vertical-align: middle;">
                                 <td style="padding: 12px; vertical-align: middle;">
+                                    <i class="fa fa-user text-muted" style="margin-right: 8px;"></i>
                                     <strong style="color: #444; font-size: 1.05em;">{{ fila.nombres }} {{ fila.apellidos }}</strong>
                                 </td>
                                 <td class="text-center" style="padding: 12px; vertical-align: middle;">
@@ -60,7 +70,7 @@
         </div>
 
         <div class="col-md-5">
-            <div class="panel panel-default" style="box-shadow: 0 4px 10px rgba(0,0,0,0.06);">
+            <div class="panel panel-default" style="box-shadow: 0 4px 10px rgba(0,0,0,0.06); border-radius: 4px;">
                 <div class="panel-heading" style="font-weight: bold;">
                     <i class="fa fa-tasks"></i> Comparativo Estadístico (Horas)
                 </div>
@@ -68,7 +78,7 @@
                     {% if datos|length > 0 %}
                         <canvas id="graficoCargaHoraria"></canvas>
                     {% else %}
-                        <p class="text-muted text-center" style="margin-top: 80px;">No existen datos para generar el gráfico.</p>
+                        <p class="text-muted text-center" style="margin-top: 100px;">No existen datos para generar el gráfico.</p>
                     {% endif %}
                 </div>
             </div>
@@ -78,22 +88,20 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Recolectar datos desde el bucle Jinja2 de Flask
-        const listaInstructores = [
-            {% for fila in datos %}
-                "{{ fila.nombres }} {{ fila.apellidos }}",
-            {% endfor %}
-        ];
+        const listaInstructores = [];
+        const listaHoras = [];
 
-        const listaHoras = [
-            {% for fila in datos %}
-                {{ fila.total_horas or 0 }},
-            {% endfor %}
-        ];
+        // Capturar la información desde el árbol HTML de forma limpia (Sin mezclar sintaxis)
+        const filas = document.querySelectorAll('.instructor-row');
+        filas.forEach(function(elemento) {
+            listaInstructores.push(elemento.getAttribute('data-nombre'));
+            listaHoras.push(parseFloat(elemento.getAttribute('data-horas')));
+        });
 
-        // 2. Construir la gráfica si existen datos reales
+        // Construir la gráfica únicamente si se recolectaron datos estructurados
         if (listaInstructores.length > 0) {
             const ctx = document.getElementById('graficoCargaHoraria').getContext('2d');
             new Chart(ctx, {
@@ -103,17 +111,17 @@
                     datasets: [{
                         label: 'Total de Horas Asignadas',
                         data: listaHoras,
-                        backgroundColor: 'rgba(92, 184, 92, 0.75)', // Tono verde del panel success
+                        backgroundColor: 'rgba(92, 184, 92, 0.75)', // Tono verde corporativo
                         borderColor: 'rgba(92, 184, 92, 1)',
                         borderWidth: 1,
                         borderRadius: 4
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Convertir las barras a formato horizontal
+                    indexAxis: 'y', // Mantiene las barras horizontales impecables
                     responsive: true,
                     plugins: {
-                        legend: { display: false } // Ocultar cuadro de leyenda redundante
+                        legend: { display: false }
                     },
                     scales: {
                         x: { 
