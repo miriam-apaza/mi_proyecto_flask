@@ -1,0 +1,26 @@
+{% extends "appbuilder/base.html" %}
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Rendimiento Académico por Curso</h2>
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Curso</th>
+                <th>Promedio de Notas</th>
+                <th>Nota Más Alta</th>
+                <th>Nota Más Baja</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for fila in datos %}
+            <tr>
+                <td>{{ fila.curso }}</td>
+                <td>{{ "%.2f"|format(fila.promedio_notas or 0) }}</td>
+                <td><span class="label label-success">{{ fila.nota_maxima or 0 }}</span></td>
+                <td><span class="label label-danger">{{ fila.nota_minima or 0 }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
