@@ -1,0 +1,28 @@
+/* Fondo de la app y tipografía */
+body {
+    background-color: #f5f7fa !important;
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
+}
+
+/* Barra de navegación superior ejecutiva */
+.navbar-default {
+    background-color: #1e3d59 !important; /* Azul Pizarrón */
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+}
+
+/* Hover de los menús en verde esmeralda */
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > .open > a {
+    background-color: #17b978 !important; /* Verde Acento */
+    color: #ffffff !important;
+}
+
+/* Tablas convertidas en Cards Modernas */
+.table {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.04) !important;
+    overflow: hidden;
+}

@@ -1,4 +1,4 @@
-from flask_appbuilder import ModelView, BaseView, expose
+from flask_appbuilder import ModelView, BaseView, expose, has_access
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from sqlalchemy import func
 
@@ -13,6 +13,7 @@ from .models import (
     Modulo,
     Inscripcion
 )
+from .ia_service import consultar_ia
 
 
 # ==========================================
@@ -196,6 +197,7 @@ class ReportesView(BaseView):
             "reportes/carga_instructores.html",
             datos=reporte_datos
         )
+    
 
     # 5. REPORTE: ESTADO DE APROBACIÓN GLOBAL
     @expose("/estado-aprobaciones")
@@ -213,6 +215,37 @@ class ReportesView(BaseView):
         return self.render_template(
             "reportes/estado_aprobaciones.html",
             datos=reporte_datos
+        )
+
+
+# ==========================================
+# VIEW REPORTE INTELIGENCIA ARTIFICIAL
+# ==========================================
+class ReporteGeneralView(BaseView):
+    route_base = '/analisis'
+    default_view = 'analisis_general'
+
+    @expose('/general/')
+    @has_access
+    def analisis_general(self):
+        """Genera un análisis por IA utilizando las métricas institucionales actuales."""
+        total_estudiantes = db.session.query(Inscripcion.estudiante_id).distinct().count()
+        total_cursos = db.session.query(Curso).count()
+        total_inscripciones = db.session.query(Inscripcion).count()
+
+        prompt = (
+            f"Actualmente el portal registra: {total_estudiantes} estudiantes activos, "
+            f"{total_cursos} cursos dictados y {total_inscripciones} matrículas procesadas. "
+            f"Genera un resumen ejecutivo de la salud institucional en 2 líneas."
+        )
+        analisis_ia = consultar_ia(prompt)
+
+        return self.render_template(
+            'reportes/reporte_general.html',  # Organizado dentro de la subcarpeta reportes
+            total_estudiantes=total_estudiantes,
+            total_cursos=total_cursos,
+            total_inscripciones=total_inscripciones,
+            analisis_ia=analisis_ia
         )
 
 
@@ -296,5 +329,14 @@ appbuilder.add_link(
     "Estado de Aprobaciones",
     href="/reportes/estado-aprobaciones",
     icon="fa-check-circle",
+    category="Reportes"
+)
+
+# SE AGREGA AL MENÚ DE REPORTES: Reporte General de IA
+appbuilder.add_view(
+    ReporteGeneralView,
+    "Análisis de IA",
+    icon="fa-robot",
+    href="/analisis/general/",
     category="Reportes"
 )
