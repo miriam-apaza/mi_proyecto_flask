@@ -1,9 +1,11 @@
-from flask_appbuilder import ModelView, BaseView, expose
+from flask_appbuilder import ModelView, BaseView, expose, has_access
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from sqlalchemy import func
+import markdown
 
-# IMPORTANTE: Asegúrate de que este import coincida con la forma en que
-# inicializaste appbuilder y db en el archivo __init__.py de tu app.
+# Importación de servicios y esquemas del sistema
+from .ia_service import consultar_ia  
+from . import db
 from app import appbuilder, db
 
 from .models import (
@@ -116,13 +118,14 @@ class InscripcionModelView(ModelView):
 
 
 # ==========================================
-# VIEW REPORTES
+# VIEW REPORTES (UNIFICADA Y CORREGIDA)
 # ==========================================
 class ReportesView(BaseView):
     route_base = '/reportes'
 
     # 1. PANEL PRINCIPAL
     @expose("/principal")
+    @has_access
     def panel_principal(self):
         """Muestra un resumen general del estado académico de la institución."""
         total_estudiantes = db.session.query(Estudiante).filter_by(estado=True).count()
@@ -138,8 +141,9 @@ class ReportesView(BaseView):
 
     # 2. REPORTE: ESTUDIANTES POR CURSO
     @expose("/estudiantes-por-curso")
+    @has_access
     def estudiantes_por_curso(self):
-        """Devuelve la lista de cursos junto con la cantidad de alumnos inscritos en cada uno."""
+        """Lista de cursos junto con la cantidad de alumnos inscritos evaluados por IA."""
         reporte_datos = (
             db.session.query(
                 Curso.nombre.label("curso"),
@@ -150,15 +154,31 @@ class ReportesView(BaseView):
             .all()
         )
 
+        # Traducimos los datos a un texto comprensible para el prompt de la IA
+        contexto_lineal = ", ".join([f"Curso: {d.curso} ({d.total_inscritos} alumnos)" for d in reporte_datos])
+
+        prompt = (
+            f"Actúa como un Director de Planificación Escolar. Analiza la siguiente distribución real de alumnos: {contexto_lineal}. "
+            f"Genera un informe analítico estricto en Markdown usando exactamente este formato:\n"
+            f"### Balance de Población Estudiantil\n"
+            f"Escribe un párrafo analizando qué asignaturas tienen sobrepoblación o abandono.\n"
+            f"**Recomendación de Infraestructura:** Agrega 2 sugerencias tácticas sobre el aforo de las aulas."
+        )
+        
+        respuesta_raw = consultar_ia(prompt)
+        analisis_html = markdown.markdown(respuesta_raw)
+
         return self.render_template(
             "reportes/estudiantes_por_curso.html",
-            datos=reporte_datos
+            datos=reporte_datos,
+            analisis_ia=analisis_html
         )
 
     # 3. REPORTE: RENDIMIENTO DE NOTAS POR CURSO
     @expose("/rendimiento-cursos")
+    @has_access
     def rendimiento_cursos(self):
-        """Muestra el promedio de notas, la nota más alta y la más baja de cada curso."""
+        """Muestra el promedio de notas de cada curso evaluado por IA."""
         reporte_datos = (
             db.session.query(
                 Curso.nombre.label("curso"),
@@ -171,13 +191,28 @@ class ReportesView(BaseView):
             .all()
         )
 
+        contexto_lineal = ", ".join([f"Curso: {d.curso} (Promedio: {d.promedio_notas:.1f}, Max: {d.nota_maxima}, Min: {d.nota_minima})" for d in reporte_datos])
+
+        prompt = (
+            f"Actúa como una IA Evaluadora de Rendimiento. Analiza las siguientes calificaciones del sistema académico: {contexto_lineal}. "
+            f"Genera un informe analítico estructurado en Markdown usando el formato:\n"
+            f"### Auditoría de Promedios Académicos\n"
+            f"Escribe un diagnóstico sobre las materias con rendimiento crítico y destacado.\n"
+            f"**Plan de Nivelación:** Detalla 2 acciones institucionales para mitigar las notas mínimas encontradas."
+        )
+        
+        respuesta_raw = consultar_ia(prompt)
+        analisis_html = markdown.markdown(respuesta_raw)
+
         return self.render_template(
             "reportes/rendimiento_cursos.html",
-            datos=reporte_datos
+            datos=reporte_datos,
+            analisis_ia=analisis_html
         )
 
     # 4. REPORTE: CARGA HORARIA POR INSTRUCTOR
     @expose("/carga-instructores")
+    @has_access
     def carga_instructores(self):
         """Suma la carga horaria total de todos los cursos asignados a cada instructor."""
         reporte_datos = (
@@ -192,13 +227,28 @@ class ReportesView(BaseView):
             .all()
         )
 
+        contexto_lineal = ", ".join([f"Profesor: {d.nombres} {d.apellidos} ({d.total_horas} hrs totales distribuidas en {d.total_cursos} cursos)" for d in reporte_datos])
+
+        prompt = (
+            f"Actúa como un Auditor Académico experto. Evalúa el reparto de horas de los docentes basándote en los siguientes registros: {contexto_lineal}. "
+            f"Genera un dictamen en Markdown bajo la estructura:\n"
+            f"### Evaluación de Carga Horaria Docente\n"
+            f"Escribe un análisis de equilibrio operativo con respecto a las horas académicas asignadas.\n"
+            f"**Puntos Críticos:** Genera una lista con dos observaciones enfocadas en evitar el burnout docente."
+        )
+        
+        respuesta_raw = consultar_ia(prompt)
+        analisis_html = markdown.markdown(respuesta_raw)
+
         return self.render_template(
             "reportes/carga_instructores.html",
-            datos=reporte_datos
+            datos=reporte_datos,
+            analisis_ia=analisis_html
         )
 
     # 5. REPORTE: ESTADO DE APROBACIÓN GLOBAL
     @expose("/estado-aprobaciones")
+    @has_access
     def estado_aprobaciones(self):
         """Muestra cuántos alumnos están en estado APROBADO o REPROBADO."""
         reporte_datos = (
@@ -210,9 +260,23 @@ class ReportesView(BaseView):
             .all()
         )
 
+        contexto_lineal = ", ".join([f"Estado: {d.estado_inscripcion} (Total: {d.total} alumnos)" for d in reporte_datos])
+
+        prompt = (
+            f"Actúa como un Analista de Calidad Educativa. Evalúa los índices de aprobación de la institución: {contexto_lineal}. "
+            f"Genera un informe estratégico en Markdown usando el formato:\n"
+            f"### Diagnóstico de Índices de Aprobación\n"
+            f"Escribe una interpretación del porcentaje global de alumnos aprobados frente a los rezagados.\n"
+            f"**Estrategias de Retención:** Plantea 2 mecanismos urgentes de tutoría pedagógica."
+        )
+        
+        respuesta_raw = consultar_ia(prompt)
+        analisis_html = markdown.markdown(respuesta_raw)
+
         return self.render_template(
             "reportes/estado_aprobaciones.html",
-            datos=reporte_datos
+            datos=reporte_datos,
+            analisis_ia=analisis_html
         )
 
 

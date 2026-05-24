@@ -189,4 +189,56 @@
         }
     });
 </script>
+
+<div class="panel panel-default" style="border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-radius: 8px; margin-top: 35px;">
+        <div class="panel-body" style="padding: 30px; background-color: #ffffff; border-radius: 8px;">
+            
+            <div style="display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f7f9fa; padding-bottom: 12px;">
+                <span style="background-color: #e8f8f5; color: #18bc9c; padding: 10px 14px; border-radius: 50%; font-size: 16px; margin-right: 12px; display: inline-block;">
+                    <i class="fa fa-android"></i>
+                </span>
+                <div style="display: inline-block; vertical-align: middle;">
+                    <h4 style="margin: 0; color: #2c3e50; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px;">
+                        Análisis de Datos con Inteligencia Artificial
+                    </h4>
+                    <small class="text-success" style="font-weight: 500;"><i class="fa fa-check-circle"></i> Auditoría cognitiva activa (DeepSeek)</small>
+                </div>
+            </div>
+            
+            <div class="ia-markdown-content" style="color: #34495e; font-size: 14.5px; line-height: 1.7; text-align: justify;">
+                {% if analisis_ia %}
+                    {{ analisis_ia | safe }}
+                {% else %}
+                    <p class="text-muted"><i class="fa fa-spinner fa-spin"></i> Computando métricas y estructurando reporte analítico...</p>
+                {% endif %}
+            </div>
+            
+        </div>
+        <div class="panel-footer" style="background-color: #fcfcfc; border-top: 1px solid #f4f6f7; text-align: right; padding: 10px 20px; font-size: 11px; color: #95a5a6; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+            <i class="fa fa-shield"></i> Reporte generado automáticamente para soporte de decisiones académicas.
+        </div>
+    </div>
+
+    <style>
+        .ia-markdown-content h3 {
+            color: #2c3e50 !important;
+            font-size: 17px !important;
+            font-weight: 600 !important;
+            margin-top: 22px !important;
+            margin-bottom: 12px !important;
+            padding-bottom: 4px !important;
+            border-bottom: 1px solid #ecf0f1 !important;
+        }
+        .ia-markdown-content strong {
+            color: #2c3e50 !important;
+            font-weight: 600 !important;
+        }
+        .ia-markdown-content ul, .ia-markdown-content ol {
+            padding-left: 20px !important;
+            margin-bottom: 15px !important;
+        }
+        .ia-markdown-content li {
+            margin-bottom: 8px !important;
+        }
+    </style>
 {% endblock %}
