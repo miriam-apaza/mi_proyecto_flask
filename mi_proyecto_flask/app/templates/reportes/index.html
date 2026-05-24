@@ -10,18 +10,27 @@
             <p class="text-muted" style="margin-top: 5px; margin-bottom: 0;">Resumen general del estado de la institución</p>
         </div>
     </div>
+    
+    {% set calif = namespace(aprobados=0, reprobados=0) %}
+    {% for reg in datos_aprobaciones %}
+        {% if reg.estado_inscripcion and reg.estado_inscripcion|string|upper|trim == 'APROBADO' %}
+            {% set calif.aprobados = reg.total %}
+        {% elif reg.estado_inscripcion and reg.estado_inscripcion|string|upper|trim == 'REPROBADO' %}
+            {% set calif.reprobados = reg.total %}
+        {% endif %}
+    {% endfor %}
 
     <div id="datos-kpi" style="display: none;"
          data-estudiantes="{{ total_estudiantes or 0 }}"
          data-cursos="{{ total_cursos or 0 }}"
          data-inscripciones="{{ total_inscripciones or 0 }}"
-         data-aprobados="{{ total_aprobados or 0 }}"
-         data-reprobados="{{ total_reprobados or 0 }}">
+         data-aprobados="{{ calif.aprobados }}"
+         data-reprobados="{{ calif.reprobados }}">
     </div>
 
     <div id="datos-cursos-bucle" style="display: none;">
-        {% for curso in alumnos_por_curso %}
-        <div class="curso-item" data-nombre="{{ curso.nombre }}" data-cantidad="{{ curso.cantidad or 0 }}"></div>
+        {% for curso in datos_cursos %}
+        <div class="curso-item" data-nombre="{{ curso.curso }}" data-cantidad="{{ curso.total_inscritos or 0 }}"></div>
         {% endfor %}
     </div>
 
@@ -101,85 +110,8 @@
         </div>
 
     </div>
-</div>
 
-<style>
-    .dashboard-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
-    }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // 1. Extraer variables métricas básicas
-        const kpiContenedor = document.getElementById('datos-kpi');
-        const totalAprobados = parseInt(kpiContenedor.getAttribute('data-aprobados')) || 0;
-        const totalReprobados = parseInt(kpiContenedor.getAttribute('data-reprobados')) || 0;
-
-        // 2. Extraer listas complejas del DOM sin mezclar sintaxis Jinja/JS
-        const cursosLabels = [];
-        const cursosData = [];
-        
-        const elementosCurso = document.querySelectorAll('.curso-item');
-        elementosCurso.forEach(function(el) {
-            cursosLabels.push(el.getAttribute('data-nombre'));
-            cursosData.push(parseInt(el.getAttribute('data-cantidad')));
-        });
-
-        // 3. Renderizar Gráfico de Barras (Inscritos por Curso)
-        const ctxCursos = document.getElementById('graficoInscritosCurso').getContext('2d');
-        new Chart(ctxCursos, {
-            type: 'bar',
-            data: {
-                labels: cursosLabels.length ? cursosLabels : ["Sin Cursos"],
-                datasets: [{
-                    label: 'Alumnos Inscritos',
-                    data: cursosData.length ? cursosData : [0],
-                    backgroundColor: 'rgba(51, 122, 183, 0.75)',
-                    borderColor: 'rgba(51, 122, 183, 1)',
-                    borderWidth: 1,
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                }
-            }
-        });
-
-        // 4. Renderizar Gráfico de Dona (Aprobados vs Reprobados)
-        const ctxAprobacion = document.getElementById('graficoAprobacion').getContext('2d');
-        new Chart(ctxAprobacion, {
-            type: 'doughnut',
-            data: {
-                labels: ['Aprobados', 'Reprobados'],
-                datasets: [{
-                    data: [totalAprobados, totalReprobados],
-                    backgroundColor: ['#5cb85c', '#d9534f'],
-                    borderColor: ['#fff', '#fff'],
-                    borderWidth: 2,
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
-        });
-    });
-</script>
-
-<div class="panel panel-default" style="border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-radius: 8px; margin-top: 35px;">
+    <div class="panel panel-default" style="border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.06); border-radius: 8px; margin-top: 35px;">
         <div class="panel-body" style="padding: 30px; background-color: #ffffff; border-radius: 8px;">
             
             <div style="display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f7f9fa; padding-bottom: 12px;">
@@ -208,26 +140,107 @@
         </div>
     </div>
 
-    <style>
-        .ia-markdown-content h3 {
-            color: #2c3e50 !important;
-            font-size: 17px !important;
-            font-weight: 600 !important;
-            margin-top: 22px !important;
-            margin-bottom: 12px !important;
-            padding-bottom: 4px !important;
-            border-bottom: 1px solid #ecf0f1 !important;
-        }
-        .ia-markdown-content strong {
-            color: #2c3e50 !important;
-            font-weight: 600 !important;
-        }
-        .ia-markdown-content ul, .ia-markdown-content ol {
-            padding-left: 20px !important;
-            margin-bottom: 15px !important;
-        }
-        .ia-markdown-content li {
-            margin-bottom: 8px !important;
-        }
-    </style>
+</div>
+IA
+
+<style>
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+    }
+    .ia-markdown-content h3 {
+        color: #2c3e50 !important;
+        font-size: 17px !important;
+        font-weight: 600 !important;
+        margin-top: 22px !important;
+        margin-bottom: 12px !important;
+        padding-bottom: 4px !important;
+        border-bottom: 1px solid #ecf0f1 !important;
+    }
+    .ia-markdown-content strong {
+        color: #2c3e50 !important;
+        font-weight: 600 !important;
+    }
+    .ia-markdown-content ul, .ia-markdown-content ol {
+        padding-left: 20px !important;
+        margin-bottom: 15px !important;
+    }
+    .ia-markdown-content li {
+        margin-bottom: 8px !important;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Extraer variables métricas básicas
+        const kpiContenedor = document.getElementById('datos-kpi');
+        const totalAprobados = parseInt(kpiContenedor.getAttribute('data-aprobados')) || 0;
+        const totalReprobados = parseInt(kpiContenedor.getAttribute('data-reprobados')) || 0;
+
+        // 2. Extraer listas complejas del DOM
+        const coursesLabels = [];
+        const coursesData = [];
+        
+        const elementosCurso = document.querySelectorAll('.curso-item');
+        elementosCurso.forEach(function(el) {
+            coursesLabels.push(el.getAttribute('data-nombre'));
+            coursesData.push(parseInt(el.getAttribute('data-cantidad')) || 0);
+        });
+
+        // 3. Renderizar Gráfico de Barras (Inscritos por Curso)
+        const ctxCursos = document.getElementById('graficoInscritosCurso').getContext('2d');
+        new Chart(ctxCursos, {
+            type: 'bar',
+            data: {
+                labels: coursesLabels.length ? coursesLabels : ["Sin Cursos"],
+                datasets: [{
+                    label: 'Alumnos Inscritos',
+                    data: coursesData.length ? coursesData : [0],
+                    backgroundColor: 'rgba(51, 122, 183, 0.75)',
+                    borderColor: 'rgba(51, 122, 183, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+
+        // 4. Renderizar Gráfico de Dona (Aprobados vs Reprobados)
+        const ctxAprobacion = document.getElementById('graficoAprobacion').getContext('2d');
+        
+        // CORRECCIÓN ADICIONAL: Si ambos están en 0, mostramos un estado vacío controlado en la dona
+        const tieneDatos = totalAprobados > 0 || totalReprobados > 0;
+        
+        new Chart(ctxAprobacion, {
+            type: 'doughnut',
+            data: {
+                labels: tieneDatos ? ['Aprobados', 'Reprobados'] : ['Sin Datos'],
+                datasets: [{
+                    data: tieneDatos ? [totalAprobados, totalReprobados] : [1],
+                    backgroundColor: tieneDatos ? ['#5cb85c', '#d9534f'] : ['#e0e0e0'],
+                    borderColor: ['#fff'],
+                    borderWidth: 2,
+                    hoverOffset: tieneDatos ? 4 : 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    });
+</script>
+
 {% endblock %}

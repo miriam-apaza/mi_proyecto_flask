@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from flask_appbuilder import Model
-# Se agregaron los tipos de datos que faltaban importar
+# Todos los tipos de datos requeridos importados correctamente
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Text, Date
 from sqlalchemy.orm import relationship
 
@@ -19,7 +19,7 @@ class Estudiante(Model):
     telefono = Column(String(20), nullable=True)
     estado = Column(Boolean, default=True)
 
-    # Corrección aquí: Usar timezone.utc de la librería datetime estándar
+    # Uso correcto de timezone.utc para evitar desfases de región
     creado_en = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     inscripciones = relationship(
@@ -53,7 +53,7 @@ class Instructor(Model):
 
 
 # =========================
-# TABLA CURSO
+# TABLA CURSO (CORREGIDA)
 # =========================
 class Curso(Model):
     __tablename__ = "curso"
@@ -61,8 +61,11 @@ class Curso(Model):
     id = Column(Integer, primary_key=True)
     nombre = Column(String(150), nullable=False)
     descripcion = Column(Text, nullable=True)
-    fecha_inicio = Column(Date, nullable=False)
-    fecha_fin = Column(Date, nullable=False)
+    
+    # CORRECCIÓN: Se cambió nullable=False a True para limpiar los valores '0000-00-00'
+    fecha_inicio = Column(Date, nullable=True)
+    fecha_fin = Column(Date, nullable=True)
+    
     carga_horaria = Column(Integer, nullable=False)
 
     instructor_id = Column(
@@ -150,5 +153,4 @@ class Inscripcion(Model):
     )
 
     def __repr__(self):
-        # Es mejor retornar strings informativos basados en las relaciones cargadas
         return f"{self.estudiante} - {self.curso}"
